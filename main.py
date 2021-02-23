@@ -25,5 +25,31 @@ def main(top):
             os.rmdir(os.path.join(root, name))
     os.rmdir(top)
 
+def _json_to_python_object(data):
+  """Takes nested dictionaries and return a python object.
+  Args:
+    data: a nested dictionary.
+  Returns:
+    A python object with the dictionary values as attributes
+  Example:
+  Given the dictionary {"name": "john", "license": {"class": "d"}}
+  returns an object output, where output.license.class is equal to "d" and
+  output.name is "john"
+  """
+  data_string = json.dumps(data)
+  return json.loads(
+      data_string,
+      object_hook=lambda d: collections.namedtuple('X', d.keys())(*d.values()))
+
+
+class Trial(object):
+  """A Phoenix Trial wrapper. Stores trial metadata."""
+
+  def __init__(self, trial_data):
+    if isinstance(trial_data, dict):
+      # mlmd (json dictionary)
+      self._internal_trial_representation = _json_to_python_object(trial_data)
+    return self._internal_trial_representation.final_measurement.objective_value
+
 # this is needed since we require in-degree + out-degree > 0
 main()
